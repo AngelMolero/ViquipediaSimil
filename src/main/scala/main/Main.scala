@@ -119,7 +119,7 @@ object Main {
   }
 
   def reduccingGirar(titulo: String, cad: List[(String, Double)]): (String, List[(String, Double)]) = {
-    (titulo, cad)
+    (titulo, cad.sortBy(_._2))
   }
 
 
@@ -219,13 +219,12 @@ object Main {
   }
 
   def mappingCosinoSimil(doc: String, documentos: List[String]): List[(String, (String, Double))] = {
-    var llista = List[(String, (String, Double))]()
     val doc1 = InfoFicheros.tituloTFIDF(doc)
     val denomin = InfoFicheros.raizSumatorio(doc)
     for (i <- documentos) yield (doc, (i, InfoFicheros.cosinesim(doc1, denomin, i)))
   }
 
-  def reduccingCosinoSimil(doc: String, cosinesim: List[(String, Double)]): (String, List[(String,Double)]) = {
+  def reduccingCosinoSimil(doc:  String, cosinesim: List[(String, Double)]): (String, List[(String,Double)]) = {
     (doc, cosinesim)
   }
 
@@ -296,7 +295,7 @@ object Main {
 
     println("Cantidad de ficheros totales: " + InfoFicheros.numDocumentos)
     // Pedir al usuario cantidad de páginas a procesar
-    val numPag = 1000//InfoFicheros.numDocumentos
+    val numPag = InfoFicheros.numDocumentos
     // Pedir al usuario cantidad de mappers
     val nmappers = 12
     // Pedir al usuario cantidad de reducers
@@ -338,12 +337,12 @@ object Main {
 
     println("------------------ MapReduce de Combinaciones sin referencias ------------------")
     val combNoRef = timeMeasurement(MR("MapReduceSystem", "combNoRef", InfoFicheros.fitxTratar, mappingCombNoRef, reduccingCombNoRef, nmappers, nreducers))
+    // Ordenar
     InfoFicheros.combinaciones = combNoRef._1.-(" ")
-
 
     println("-------------------Resultado-------------------")
     println("Tiempo de ejecución: " + combNoRef._2 / 1000000000.0 + " segundos")
-    combNoRef._1.take(10).foreach(x => println("Titulo: "+ x._1 + " -> Titulos:" + x._2.length))
+    InfoFicheros.combinaciones.take(10).foreach(x => println("Titulo: "+ x._1 + " -> Titulos:" + x._2.length))
     // imprimir el resultado,  -> Titulos:7373
     /*println("El raro: " + combNoRef._1(Empty))
     println("El raro: " + combNoRef._1.-(null))
