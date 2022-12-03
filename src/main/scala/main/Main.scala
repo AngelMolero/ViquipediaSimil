@@ -119,7 +119,7 @@ object Main {
   }
 
   def reduccingGirar(titulo: String, cad: List[(String, Double)]): (String, List[(String, Double)]) = {
-    (titulo, cad)
+    (titulo, cad.sortBy(_._2))
   }
 
 
@@ -296,7 +296,7 @@ object Main {
 
     println("Cantidad de ficheros totales: " + InfoFicheros.numDocumentos)
     // Pedir al usuario cantidad de páginas a procesar
-    val numPag = 1000//InfoFicheros.numDocumentos
+    val numPag = InfoFicheros.numDocumentos
     // Pedir al usuario cantidad de mappers
     val nmappers = 12
     // Pedir al usuario cantidad de reducers
