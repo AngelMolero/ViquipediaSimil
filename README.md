@@ -1,13 +1,12 @@
 # ViquipediaSimil
 
-En aquest repositori hi trobareu una "llavor" per a poder usar/modifica el MapReduce vist a classe i també les llibreries de processament d'XML. A partir d'aquesta llavor podreu fer la vostra pràctica.
+En aquest respositori hi trobem una carpeta anomenada **primeraPart** on hi ha el codi i el document amb les execucions de la primera part de la pràctica. Mentre que dins la carpeta **src/main/** s'hi troba el codi de la segona part de la pràctica.
 
-Fixeu-vos que a la carpeta principal també hi teniu el fitxer **stopwordscatalanet.txt** amb català i un directori **viqui_files** amb els fitxers xml del fragment de la Viquipèdia a tractar (en el nostre cas són pàgines de com a mínim 5k que parlin de la segona guerra mundial, si algú prefereix un altre tema que s'actualizi el conjunt de pàgines amb el tema que vulgui).
+## Objectiu Pràctica
+L'objectiu tant de la primera part com de la segona és la de agafar diferents fitxers i comprovar la seva similitud. A la primera part, es realitza de forma iterativa, mentre que a la segona es realitza mitjançant mappers i reducers. 
 
-També podeu trobar l'enunciat detallat al document **practica2223b.pdf** i a la carpeta **primeraPartPractica** hi trobareu l'enunciat i els fitxers de la primera part de la pràctica.
+També, cal remarcar que a la primera part es fa ús de menys fitxers que a la segona, ja que, sinó trigaria molt temps.
 
-Per fer-ho correctament us recomano que aneu al **use this template** i creeu una còpia amb visibilitat **privada** amb el vostre nom de repositori.
-Pel lliurament em podeu donar permisos a mi.
 
 
 
