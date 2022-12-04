@@ -14,17 +14,17 @@ import scala.io.StdIn
 
 object Main {
 
-  def mappingLlegir(id: Int, fitxers: List[String]): List[(String, (List[String], List[String]))] = {
-    var llista = List[(String, (List[String], List[String]))]()
+  def mappingLlegir(id: Int, fitxers: List[String]): List[(String, (List[String], List[String], List[String]))] = {
+    var llista = List[(String, (List[String], List[String], List[String]))]()
     for (f <- fitxers) {
       val parseResult = ViquipediaParse.parseViquipediaFile(f)
-      llista = llista :+ (parseResult.titol, (parseResult.contingut, parseResult.refs))
+      llista = llista :+ (parseResult.titol, (parseResult.contingut, parseResult.refs, parseResult.fotos))
     }
     llista
   }
 
-  def reduccingLlegir(titulo: String, cad: List[(List[String], List[String])]): (String, List[(List[String], List[String])]) = {
-    (titulo, List((cad.head._1, cad.head._2)))
+  def reduccingLlegir(titulo: String, cad: List[(List[String], List[String], List[String])]): (String, List[(List[String], List[String], List[String])]) = {
+    (titulo, List((cad.head._1, cad.head._2, cad.head._3)))
   }
 
   /**
@@ -32,13 +32,12 @@ object Main {
    * @param fitxer directorio
    * @return lista de ficheros
    */
-  def mappingRef(titol: String, info: List[(List[String], List[String])]): List[(String,List[String])] = {
-    //for (x <- info.head._2) yield (titol,(x, x))
-    List((titol,info.head._2))
+  def mappingRef(titol: String, info: List[String]): List[(String,Int)] = {
+   for (i <- info) yield (i,1)
   }
 
-  def reduccingRef(titulo: String, cad: List[List[String]]): (String, Int) = {
-    (titulo, cad.head.length)
+  def reduccingRef(titulo: String, cad: List[Int]): (String, Int) = {
+    (titulo.substring(2,titulo.length-2), cad.sum)
   }
 
 
@@ -79,7 +78,7 @@ object Main {
    * @return lista de tuplas (titulo, (palabra, ocurrencias))
    */
   def mappingTF(titolPalabra: (String,String), ocurrencias: List[Int]): List[(String, (String, Int))] = {
-    List(((titolPalabra._1,(titolPalabra._2,ocurrencias.head))))
+    List((titolPalabra._1,(titolPalabra._2,ocurrencias.head)))
   }
 
   /**
@@ -98,9 +97,8 @@ object Main {
    * @param palabrasOcurrencias lista de tuplas (palabra, ocurrencias).
    * @return lista de tuplas (palabra, (titulo, ocurrencias, total de terminos en el documento)).
    */
-  def mappingTfIdf(titol: String, palabrasOcurrencias: List[(String, Int)]): List[(String, (String, Int, Int))] = {
-    val n = palabrasOcurrencias.map(_._2).sum
-    for (palabraOcurrencia <- palabrasOcurrencias) yield ((palabraOcurrencia._1,(titol,palabraOcurrencia._2,n)))
+  def mappingTfIdf(titol: String, palabrasOcurrencias: List[(String, Int)]): List[(String, (String, Int))] = {
+    for (palOcur <- palabrasOcurrencias) yield ((palOcur._1,(titol,palOcur._2)))
   }
 
   /**
@@ -109,8 +107,8 @@ object Main {
    * @param cad lista de tuplas (titulo, ocurrencias, total de terminos en el documento).
    * @return tupla (titulo, (palabra, tfidf)).
    */
-  def reduccingTfIdf(palabra: String, cad: List[(String, Int, Int)]): (String, List[(String, Double)]) = {
-    val tfidf = cad.map(x => (x._1, (x._2.toDouble / x._3.toDouble) * math.log(InfoFicheros.numDocumentos / cad.length)))
+  def reduccingTfIdf(palabra: String, cad: List[(String, Int)]): (String, List[(String, Double)]) = {
+    val tfidf = cad.map(x => (x._1, x._2.toDouble * math.log(InfoFicheros.numDocumentos / cad.length)))
     (palabra, tfidf)
   }
 
@@ -122,94 +120,6 @@ object Main {
     (titulo, cad.sortBy(_._2))
   }
 
-
-
-  //def mappingCombinacionDocs
-
-  /* /**
-    * Función que mappea un directorio a una lista de ficheros
-    * @param titulo de la pagina
-    * @param cont contenido de la pagina que son palabras
-    * @return
-    */
-   def mappingIdf(titulo: String, cont: List[String]): List[(String, Int)]  = {
-     for(x <- cont.distinct) yield (x, 1)
-   }
-
-   /**
-    * Función que reduce el resultado de la función mappingIdf
-    * @param palabra palabra
-    * @param lista lista de apariciones de la palabra en todos los documentos
-    * @return tupla con la palabra y devuelve el calculo idf de la palabra
-    */
-   def reduccingIdf(palabra: String, lista: List[Int]): (String, Double) = {
-     (palabra, math.log(InfoFicheros.numDocumentos /  lista.sum))
-   }
-
-   /**
-    * Función que mappea la lista de palabras de un fichero
-    * @param titulo titulo de la pagina
-    * @param cont contenido de la pagina que son palabras
-    * @return lista de tuplas con la palabra y el titulo de la pagina y el numero de veces que aparece
-    */
-   def mappingTfIdf(titulo: String, cont: List[String]): List[((String,String), Int)] = {
-     for(x <- cont) yield ((x,titulo), 1)
-   }
-
-   /**
-    * Función que reduce el resultado de la función mappingTf y calculamos el TfIdf
-    * @param titPal palabra y titulo de la pagina
-    * @param lista lista de apariciones de la palabra en el documento
-    * @return tupla con el titulo y la palabra y devuelve el calculo TfIdf de la palabra
-    */
-   def reduccingTfIdf(titPal: (String, String), lista: List[Int]): ((String, String), List[Double]) = {
-     (titPal, List(lista.sum * InfoFicheros.idf(titPal._1)))
-   }*/
-
-  /**
-   * Función que mappea la lista de palabras de un fichero
-   * @param titPal palabra y titulo de la pagina
-   * @param cont TFIDF de la palabra
-   * @return
-   */
-  def mappingPalDoc(titPal: (String, String), cont: List[Double]): List[(String, (String, Double))] = {
-    List((titPal._1, (titPal._2, cont.head)))
-  }
-
-  def reduccingPalDoc(palabra: String, lista: List[(String, Double)]): (String, List[(String, Double)]) = {
-    (palabra, lista)
-  }
-
-  // Función que mappea, dado la palabra y la lista de documentos en los que aparece, y su tfidf, queremos obtener ((doci, docj), (tfidfi, tfidfj))
-  /*def mappingSimil(palabra: String, cont: List[(String, Double)]): List[((String, String), (Double, Double))] = {
-    var llista = List[((String, String), (Double, Double))]()
-    for (i <- cont.indices) {
-      for (j <- i+1 until cont.length) {
-        llista = llista :+ ((cont(i)._1, cont(j)._1), (cont(i)._2, cont(j)._2))
-      }
-    }
-    llista
-    //cont.combinations(2).map{case List((a,b), (c,d)) => ((a,c), (b,d))}.toList
-    //cont.flatMap(x => cont.map(y => if (x._2 > y._2) ((x._1, y._1), (x._2, y._2)) else ((y._1, x._1), (y._2, x._2))))
-  }*/
-
-  /*def mappingCosinoSimil(doc: String, documentos: List[String]): List[(String, (String, Double))] = {
-    var llista = List[(String, (String, Double))]()
-    val doc1 = InfoFicheros.tituloTFIDF(doc)
-    for (i <- documentos) {
-      val doc2 = InfoFicheros.tituloTFIDF(i)
-      val p = (doc1 ::: doc2).groupBy(_._1).map(a => (a._1, a._2.padTo(2, ("", 0.0))))
-      val numerador = p.map(a => (a._1, a._2.foldLeft(1.0)((x, y) => x * y._2))).foldLeft(0.0)((x, y) => x + y._2)
-      val denominador = Math.sqrt(doc1.foldLeft(0.0)((x, y) => x + y._2 * y._2).doubleValue) * Math.sqrt(doc2.foldLeft(0.0)((x, y) => x + y._2 * y._2).doubleValue)
-      val cosino = numerador / denominador
-      llista = llista :+ (doc, (i, cosino))
-    }
-    llista
-  }
-
-  def reduccingCosinoSimil(doc: String, documentos:List[(String, Double)]): (String, List[(String,Double)]) = {
-    (doc, documentos)
-  }*/
   def mappigRaizSumatorio(titulo: String, cont: List[(String, Double)]): List[(String, Double)] = {
     for (i <- cont) yield (titulo, i._2)
   }
@@ -228,32 +138,29 @@ object Main {
     (doc, cosinesim)
   }
 
-
-  /*def mappingCosinoSimil(doc: String, documentos: List[String]): List[((String, String),(Double, Double))] = {
-    val denomin = InfoFicheros.raizSumatorio(doc)
-    for (doc2 <- documentos) yield ((doc, doc2), (denomin, InfoFicheros.raizSumatorio (doc2)))
+  def mappingEstructurarCosinesim(doc: String, cosinesim: List[(String, Double)]): List[((String, String), Double)] = {
+    for (i <- cosinesim) yield ((doc, i._1), i._2)
   }
 
-  def reduccingCosinoSimil(doc: (String, String), denominadores:List[(Double, Double)]): ((String, String), Double) = {
-    val doc1 = InfoFicheros.tituloTFIDF(doc._1)
-    val doc2 = InfoFicheros.tituloTFIDF(doc._2)
-    //val numerador = doc1.map(x => doc2.find(y => y._1 == x._1).map(y => x._2 * y._2).getOrElse(0.0)).sum
-    val p =  (doc1 ::: doc2).groupBy(_._1).map(a => (a._1, a._2.padTo(2, ("",0.0))))
-    val numerador = p.map(a => (a._1, a._2.foldLeft(1.0)((x, y) => x * y._2))).foldLeft(0.0)((x, y) => x + y._2)
-    val denominador = denominadores.head._1 * denominadores.head._2
-    (doc, numerador / denominador)
-  }*/
+  def reduccingEstructurarCosinesim(doc: (String, String), cosinesim: List[Double]): ((String,String), Double) = {
+    (doc, cosinesim.head)
+  }
 
-  //(hola -> ((doc1,5.2)...)   doc1 -> ((hola,5.2))...)              doc1 -> [doc2, doc3, doc4]
+  def mappingFotos(titol: String, fotos: List[String]): List[(Int, Int)] = {
+    List((1, fotos.length))
+  }
 
-  /*def reduccingSimil(doc: (String, String), lista: List[(Double, Double)]): ((String, String), Double) = {
-    val v1 = lista.map(_._1)
-    val v2 = lista.map(_._2)
-    val productoEscalar = v1.zip(v2).map{ case (x1, x2) => x1 * x2 }.sum
-    val raizSumatorio = math.sqrt(v1.map(x => x * x).sum) * math.sqrt(v2.map(x => x * x).sum)
-    (doc, productoEscalar / raizSumatorio)
-  }*/
+  def reduccingFotos(titol: Int, fotos: List[Int]): (Int, Double) = {
+    (titol, fotos.sum/InfoFicheros.numDocumentos)
+  }
 
+  def mappingNombrePromRef(titol: String, ref: List[String]): List[(Int, Int)] = {
+    List((1, ref.length))
+  }
+
+  def reduccingNombrePromRef(titol: Int, ref: List[Int]): (Int, Double) = {
+    (titol, ref.sum/InfoFicheros.numDocumentos)
+  }
 
   def MR[K1, V1, K2, V2, V3](actorSystem: String, actorname: String, input:  List[(K1, List[V1])], mapping: (K1, List[V1]) => List[(K2, V2)], reduccing: (K2, List[V2]) => (K2, V3), nmappers: Int, nreducers: Int): Map[K2, V3] = {
     // Crear el actor system
@@ -291,11 +198,12 @@ object Main {
 
   def main(args: Array[String]): Unit = {
     InfoFicheros.ficheros = ProcessListStrings.getListOfFiles("viqui_files").map(_.toString)
+   // InfoFicheros.numDocumentos = InfoFicheros.ficheros.length
+    // Pedir al usuario cantidad de páginas a procesar
     InfoFicheros.numDocumentos = InfoFicheros.ficheros.length
 
     println("Cantidad de ficheros totales: " + InfoFicheros.numDocumentos)
-    // Pedir al usuario cantidad de páginas a procesar
-    val numPag = InfoFicheros.numDocumentos
+
     // Pedir al usuario cantidad de mappers
     val nmappers = 12
     // Pedir al usuario cantidad de reducers
@@ -310,16 +218,14 @@ object Main {
     //Obtener el contenido de los ficheros Map[String, List[String]]
     InfoFicheros.fitxConten = for (f <- ficheros._1) yield (f._1, f._2.head._1)
     InfoFicheros.fitxRefs = for (f <- ficheros._1) yield (f._1, f._2.head._2)
+    InfoFicheros.fitxFotos = for (f <- ficheros._1) yield (f._1, f._2.head._3)
 
     println("------------------ RESULTADO ------------------")
     println("Tiempo de ejecución: " + ficheros._2 / 1000000000.0 + " segundos")
 
     // MapReduce de Referencia
     println("------------------ MapReduce de Referencias ------------------")
-    // En acabar el MapReduce ens envia un missatge amb el resultat
-    //val reffitxresult: Map[String, Int] = MR("MapReduceSystem", "reffitx", ficheros.toList, mappingRef, reduccingRef, nmappers, nreducers)
-    // Pasar función de Map Reduce al Time Mesuarament
-    val reffitxresult = timeMeasurement(MR("MapReduceSystem", "reffitx", ficheros._1.toList, mappingRef, reduccingRef, nmappers, nreducers))
+    val reffitxresult = timeMeasurement(MR("MapReduceSystem", "reffitx", InfoFicheros.fitxRefs.toList, mappingRef, reduccingRef, nmappers, nreducers))
 
     // Ordenar el resultado por número de referencias
     val reffitxresultSorted = reffitxresult._1.toList.sortBy(_._2).reverse
@@ -327,12 +233,11 @@ object Main {
     println("-------------------Resultado-------------------")
     println("Tiempo de ejecución: " + reffitxresult._2 / 1000000000.0 + " segundos")
     println("Cantidad de ficheros devueltos: " + reffitxresultSorted.length)
-    println("Cantidad de ficheros que queremos obtener: " + numPag)
+    println("Cantidad de ficheros que queremos obtener: " + InfoFicheros.numDocumentos)
     //Imprmir titulo y numero de referencias
-    val fitxers = reffitxresultSorted.take(10)
-    fitxers.foreach(x => println("Titulo: "+ x._1 + " -> Referencias:" + x._2))
+    reffitxresultSorted.take(10).foreach(x => println("Titulo: "+ x._1 + " -> Referencias:" + x._2))
 
-    if(numPag < InfoFicheros.numDocumentos) InfoFicheros.fitxTratar = InfoFicheros.fitxConten.filter(x => reffitxresultSorted.take(numPag).map(_._1).contains(x._1)).toList.sortBy(_._1)
+    if(InfoFicheros.numDocumentos < InfoFicheros.ficheros.length) InfoFicheros.fitxTratar = InfoFicheros.fitxConten.filter(x => reffitxresultSorted.take(InfoFicheros.numDocumentos).map(_._1).contains(x._1)).toList.sortBy(_._1)
     else InfoFicheros.fitxTratar = InfoFicheros.fitxConten.toList.sortBy(_._1)
 
     println("------------------ MapReduce de Combinaciones sin referencias ------------------")
@@ -343,13 +248,6 @@ object Main {
     println("-------------------Resultado-------------------")
     println("Tiempo de ejecución: " + combNoRef._2 / 1000000000.0 + " segundos")
     InfoFicheros.combinaciones.take(10).foreach(x => println("Titulo: "+ x._1 + " -> Titulos:" + x._2.length))
-    // imprimir el resultado,  -> Titulos:7373
-    /*println("El raro: " + combNoRef._1(Empty))
-    println("El raro: " + combNoRef._1.-(null))
-    println("El raro: " + combNoRef._1(null).length)
-    combNoRef._1.-(null)*/
-    // Borrar vacio
-
 
     println("------------------ MapReduce de palabras contadas ------------------")
     val palabrasContadas = timeMeasurement(MR("MapReduceSystem", "palabrasContadas", InfoFicheros.fitxTratar, mappingWC, reduccingWC, nmappers, nreducers))
@@ -374,12 +272,13 @@ object Main {
     println("-------------------Resultado-------------------")
     println("Tiempo de ejecución: " + tfidf._2 / 1000000000.0 + " segundos")
     println("Cantidad de paginas devueltas tfidf: " + tfidf._1.size)
-    tfidf._1.take(10).foreach(x => println("Palabra: "+ x._1 + " -> Titulo: " + x._2.head._1 + " -> tfidf: " + x._2.head._2))
+   // tfidf._1.take(10).foreach(x => println("Palabra: "+ x._1 + " -> Titulo: " + x._2.head._1 + " -> tfidf: " + x._2.sortBy(_._2).take(10).reverse))
 
     println("------------------ MapReduce de girar ------------------")
     val girar = timeMeasurement(MR("MapReduceSystem", "girar", tfidf._1.toList, mappingGirar, reduccingGirar, nmappers, nreducers))
     println("-------------------Resultado-------------------")
     println("Tiempo de ejecución: " + girar._2 / 1000000000.0 + " segundos")
+    girar._1.take(10).foreach(x => println("Palabra: "+ x._1 + " -> Titulo: " + x._2.head._1 + " -> tfidf: " + x._2.sortBy(_._2).take(10).reverse))
 
     InfoFicheros.tituloTFIDF = girar._1
 
@@ -393,48 +292,26 @@ object Main {
     val similitud = timeMeasurement(MR("MapReduceSystem", "similitud", InfoFicheros.combinaciones.toList, mappingCosinoSimil, reduccingCosinoSimil, nmappers, nreducers))
     println("-------------------Resultado-------------------")
     println("Tiempo de ejecución: " + similitud._2 / 1000000000.0 + " segundos")
+    //similitud._1.take(10).foreach(x => println("Titulo: "+ x._1 + " -> Titulos:" + x._2.take(10)))
 
-/*
-    println("------------------ MapReduce de similitud de documentos ------------------")
-    val similitud = timeMeasurement(MR("MapReduceSystem", "similitud", tfidf._1.toList, mappingSimil, reduccingSimil, nmappers, nreducers))
-    // tupla(titulo1,titulo2), double
+    println("------------------ MapReduce de Similitud Estructura ------------------")
+    /*val similitudEstructura = timeMeasurement(MR("MapReduceSystem", "similitudEstructura", similitud._1.toList, mappingEstructurarCosinesim, reduccingEstructurarCosinesim, nmappers, nreducers))
     println("-------------------Resultado-------------------")
-    println("Tiempo de ejecución: " + similitud._2 / 1000000000.0 + " segundos")
-    println("Cantidad de paginas devueltas similitud: " + similitud._1.size)
-    similitud._1.take(10).foreach(x => println("Titulo1: "+ x._1._1 + " -> Titulo2: " + x._1._2 + " -> Similitud: " + x._2))
-*/
-   /* println("------------------ MapReduce de idf ------------------")
-    // Calcular el idf de cada palabra
-  //  val idf = timeMeasurement(MR("MapReduceSystem", "idf", InfoFicheros.fitxConten, mappingIdf, reduccingIdf, nmappers, nreducers))
-    InfoFicheros.idf = idf._1
-    // Imprimir los 10 primeros idf de cada palabra
-    //InfoFicheros.idf.take(10).foreach(println)
+    println("Tiempo de ejecución: " + similitudEstructura._2 / 1000000000.0 + " segundos")
+    similitudEstructura._1.toList.sortBy(_._2).reverse.take(10).foreach(x => println("Titulo: "+ x._1 + " -> Similitud:" + x._2))*/
 
-    println("------------------ MapReduce de tfidf ------------------")
-    // Calcular el tfidf de cada palabra
-    val tfidf = timeMeasurement(MR("MapReduceSystem", "tfidf", InfoFicheros.fitxConten, mappingTfIdf, reduccingTfIdf, nmappers, nreducers))*/
 
-    //InfoFicheros.tfidf = tfidf._1
-
-    // Imprimir los 10 primeros tfidf de cada palabra
-   // InfoFicheros.tfidf.take(10).foreach(println)
-
-    /*println("------------------ MapReduce de por cada palabra tener una lista de tfidf y documento ------------------")
-    // MapReduce para obtener la palabra con la lista de documentos con su tfidf
-    val palDocTfidf = timeMeasurement(MR("MapReduceSystem", "palDoc", InfoFicheros.tfidf.toList, mappingPalDoc, reduccingPalDoc, nmappers, nreducers))
-
-    println("------------------ MapReduce de similitud de documentos ------------------")
-    // MapReduce para calcular el cosino de similitud entre los documentos
-    val similitud = timeMeasurement(MR("MapReduceSystem", "similitud", palDocTfidf._1.toList, mappingSimil, reduccingSimil, nmappers, nreducers))
-
-    // Ordenar el resultado por similitud
-    val similitudSorted = similitud._1.toList.sortBy(_._2).reverse
+    println("------------------ MapReduce de nombre promedio de referencias todas las paginas ------------------")
+    val nombrePromRef = timeMeasurement(MR("MapReduceSystem", "nombrePromRef", InfoFicheros.fitxRefs.toList, mappingNombrePromRef, reduccingNombrePromRef, nmappers, nreducers))
     println("-------------------Resultado-------------------")
-    var tiempo = (idf._2 + tfidf._2 + palDocTfidf._2 + similitud._2) / 1000000000.0
-    println("Tiempo de ejecución: " + tiempo + " segundos")
+    println("Tiempo de ejecución: " + nombrePromRef._2 / 1000000000.0 + " segundos")
+    println("Numero promedio de referencias: " + nombrePromRef._1.head._2)
 
-    // Imprimir los 10 primeros documentos con su similitud
-    similitudSorted.take(10).foreach(println)*/
+    println("------------------ MapReduce de nombre promedio de todas las fotos ------------------")
+    val nombrePromedioFotos = timeMeasurement(MR("MapReduceSystem", "nombrePromedioFotos", InfoFicheros.fitxFotos.toList, mappingFotos, reduccingFotos, nmappers, nreducers))
+    println("-------------------Resultado-------------------")
+    println("Tiempo de ejecución: " + nombrePromedioFotos._2 / 1000000000.0 + " segundos")
+    println("Numero promedio de fotos: " + nombrePromedioFotos._1.head._2)
   }
 }
 

@@ -10,7 +10,7 @@ object ViquipediaParse {
 
   // Definim una case class per a retornar diversos valor, el titol de la pàgina, el contingut i les referències trobades.
   // El contingut, s'ha de polir més? treure refs? stopwords?...
-  case class ResultViquipediaParsing(titol: String, contingut: List[String], refs: List[String])
+  case class ResultViquipediaParsing(titol: String, contingut: List[String], refs: List[String], fotos: List[String])
 
   def testParse= this.parseViquipediaFile(exampleFilename)
 
@@ -44,6 +44,10 @@ object ViquipediaParse {
     // elimino les que tenen :
     val filteredRefs = refs.filterNot(_.contains(':'))
 
+    // identifico les fotos [[Fitxer:nom del fitxer i opcions]]
+    val fotos = new Regex("\\[\\[Fitxer:[^\\]]*\\]\\]")
+    val fotosList = (fotos findAllIn contingut).toList
+
     // caldrà eliminar-ne més?
     var elim = new Regex("\\[\\[[^\\]]*:[^\\]]*\\]\\]")
     contingut = (elim replaceAllIn (contingut, ""))
@@ -61,6 +65,6 @@ object ViquipediaParse {
     //println(refs.length)
     //println(filteredRefs.length)
     xmlleg.close()
-    ResultViquipediaParsing(titol, contingut1, filteredRefs)
+    ResultViquipediaParsing(titol, contingut1, filteredRefs, fotosList)
   }
 }
