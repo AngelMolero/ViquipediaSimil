@@ -1,13 +1,19 @@
 # ViquipediaSimil
 
-En aquest repositori hi trobareu una "llavor" per a poder usar/modifica el MapReduce vist a classe i també les llibreries de processament d'XML. A partir d'aquesta llavor podreu fer la vostra pràctica.
+En aquest respositori hi trobem el contingut de les dues parts de la pràctica. Per visualitzar el contingut de la primera part, ens hem de situar dins el directori **primeraPart**. Aquí dins trobem:
+<ol>
+  <li><strong>inputFiles</strong>: En aquest directori trobem els fitxers utilitzats per realitzar les proves.</li>
+  <li><strong>english-stop.txt</strong>: Aquest fitxer conté algunes de les paraules que s'han d'eliminar, ja que, no són rellevants per les comprovacions.</li>
+  <li><strong>Main.scala</strong>: En aquest fitxer, hi trobem el codi Scala utilitzat per realitzar la pràctica.</li>
+  <li><strong>Memoria...pdf</strong>: En aquest document s'hi troben els diferents mètodes dividits de cada secció realitzada de la pràctica i un apartat amb les diferents execucions i resultats obtinguts.</li>
+  <li><strong>practica2223.pdf</strong>: En aquest document, hi trobem l'enunciat de la primera part de la pràctica</li>
+</ol
 
-Fixeu-vos que a la carpeta principal també hi teniu el fitxer **stopwordscatalanet.txt** amb català i un directori **viqui_files** amb els fitxers xml del fragment de la Viquipèdia a tractar (en el nostre cas són pàgines de com a mínim 5k que parlin de la segona guerra mundial, si algú prefereix un altre tema que s'actualizi el conjunt de pàgines amb el tema que vulgui).
+## Objectiu Pràctica
+L&rsquo;objectiu tant de la primera part com de la segona és la d&rsquo;agafar diferents fitxers i comprovar la seva similitud. A la primera part, es realitza de forma iterativa, mentre que a la segona es realitza mitjançant mappers i reducers. 
 
-També podeu trobar l'enunciat detallat al document **practica2223b.pdf** i a la carpeta **primeraPartPractica** hi trobareu l'enunciat i els fitxers de la primera part de la pràctica.
+També, cal remarcar que a la primera part es fa ús de menys fitxers que a la segona, ja que, sinó trigaria molt temps.
 
-Per fer-ho correctament us recomano que aneu al **use this template** i creeu una còpia amb visibilitat **privada** amb el vostre nom de repositori.
-Pel lliurament em podeu donar permisos a mi.
 
 
 
