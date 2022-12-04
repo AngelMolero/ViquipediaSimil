@@ -46,7 +46,7 @@ class MapReduce[K1,V1,K2,V2,V3]( input:List[(K1,List[V1])],
                                  numappers: Int,
                                  numreducers: Int) extends Actor {
 
-
+  println("Hola "+input.length)
   var nmappers = 0 // adaptar per poder tenir menys mappers
   var mappersPendents = 0
   var nreducers = 0 // adaptar per poder tenir menys reducers
@@ -67,14 +67,11 @@ class MapReduce[K1,V1,K2,V2,V3]( input:List[(K1,List[V1])],
 
     // En rebre el missatge MapReduceCompute engeguem el procés.
     case MapReduceCompute() =>
-      println("Hem rebut lencarrec")
       client = sender() // Ens apuntem qui ens ha fet l'encàrrec per enviar-li el missatge més tard.
 
       // farem un mapper per parella (K1,List[V1]) de l'input
 
       nmappers = numappers
-
-      println("Going to create MAPPERS!!")
 
       // Al crear actors a dins d'altres actors, enlloc de crear el ActorSystem utilitzarem context i així es va
       // organitzant la jerarquia d'actors.
@@ -111,9 +108,6 @@ class MapReduce[K1,V1,K2,V2,V3]( input:List[(K1,List[V1])],
       // Necessitem controlar quant s'han acabat tots els mappers per poder llençar els reducers després...
       mappersPendents = input.length
 
-      println("All sent to Mappers, now start listening...")
-
-
     // Anem rebent les respostes dels mappers i les agrupem al diccionari per clau.
     // Tornem a necessitar anotar els tipus del paràmetre que reb fromMapper tal com ho hem fet
     // o be en el codi comentat al generar les tuples.
@@ -145,7 +139,6 @@ class MapReduce[K1,V1,K2,V2,V3]( input:List[(K1,List[V1])],
           for ((k, v) <- g)
             reducers(i % nreducers) ! toReducer(k: K2, v: List[V2])
         }*/
-        println("All sent to Reducers")
       }
 
     // A mesura que anem rebent respostes del reducer, tuples (K2, V3), les anem afegint al Map del resultatfinal i
@@ -158,7 +151,6 @@ class MapReduce[K1,V1,K2,V2,V3]( input:List[(K1,List[V1])],
       // En arribar a 0 enviem a qui ens ha encarregat el MapReduce el resultat. De fet l'està esperant pq haurà fet un ask.
       if (reducersPendents == 0) {
         client ! resultatFinal
-        println("All Done from Reducers!")
         // Ara podem alliberar els recursos dels actors, el propi MapReduce, tots els mappers i els reducers.
         // Fixem-nos que no te sentit que tornem a engegar "aquest mateix" MapReduce.
         context.stop(self)
