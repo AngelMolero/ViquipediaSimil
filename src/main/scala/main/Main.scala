@@ -14,44 +14,74 @@ import scala.io.StdIn
 
 object Main {
 
+  // Crear el actor system
+  val systema: ActorSystem = ActorSystem("systema")
+
+  /**
+   * Función que mapea y obtenemos la información de los ficheros.
+   * @param id : id no es necesario usarlo.
+   * @param fitxers : el nombre del fichero.
+   * @return titulo y la información del fichero.
+   */
   def mappingLlegir(id: Int, fitxers: List[String]): List[(String, (List[String], List[String], List[String]))] = {
-    var llista = List[(String, (List[String], List[String], List[String]))]()
-    for (f <- fitxers) {
-      val parseResult = ViquipediaParse.parseViquipediaFile(f)
-      llista = llista :+ (parseResult.titol, (parseResult.contingut, parseResult.refs, parseResult.fotos))
-    }
-    llista
+    val parseResult = ViquipediaParse.parseViquipediaFile(fitxers.head)
+    List((parseResult.titol, (parseResult.contingut, parseResult.refs, parseResult.fotos)))
   }
 
+  /**
+   * Función que reduce los valores de una lista de tuplas de la forma (String, (List[String], List[String], List[String]))
+   * @param titulo :  documento que se está reduciendo
+   * @param cad : tenemos guardado una lista de contenido, otra de referencias y otra de fotos.
+   * @return : devuelvolvemos el titulo del documento, el contenido, las referencias y las fotos.
+   */
   def reduccingLlegir(titulo: String, cad: List[(List[String], List[String], List[String])]): (String, List[(List[String], List[String], List[String])]) = {
     (titulo, List((cad.head._1, cad.head._2, cad.head._3)))
   }
 
   /**
-   * Función que mappea un directorio a una lista de ficheros
-   * @param fitxer directorio
-   * @return lista de ficheros
+   * Función que mappea para estructurar los datos. Nos interesa que key sea la referencia y el value un contador, de las veces que sale esa referencia en el documento.
+   * @param titol : título del documento.
+   * @param cad : contenido del documento.
+   * @return List[(String, Int)] : lista de referencias y el número de veces que aparece.
    */
   def mappingRef(titol: String, info: List[String]): List[(String,Int)] = {
    for (i <- info) yield (i,1)
   }
 
+  /**
+   * Función que reduce a una lista de tuplas (String,Int). Con el titulo y el numero de referencias en las que sale entre todos los documentos.
+   * Como hay titulos en las referencias que no existen como fichero, se filtran.
+   * @param titol titulo de la referencia
+   * @param l lista de enteros 1, para hacer la suma.
+   * @return lista de tuplas (String,Int), referencia y la suma de las veces que sale entre todos los documentos.
+   */
   def reduccingRef(titulo: String, cad: List[Int]): (String, Int) = {
     val t = titulo.substring(2,titulo.length-2)
     if (InfoFicheros.fitxConten.contains(t)) (t, cad.sum)
-    else (titulo, 0)
+    else (" ", 0)
   }
 
-
+  /**
+   * Función que nos devuelve una lista de combinaciones de ficheros que no tienen referencias entre ellos, es decir de titulo -> x
+   * @param titol titulo del fichero
+   * @param palabras lista de palabras del fichero
+   * @return lista de combinaciones de ficheros
+   * Para saber si existe referencias usamos la función existRef
+   */
   def mappingCombNoRef(titol: String, palabras: List[String]): List[(String, String)] = {
     val l = InfoFicheros.fitxTratar.drop(InfoFicheros.fitxTratar.indexWhere(_._1 == titol))
     for (x <- l) yield if(!titol.equals(x._1) && InfoFicheros.existRef(titol, x._1)) (titol, x._1) else (" ","")
   }
 
+  /**
+   * Función que nos devuelve una lista de combinaciones de ficheros que no tienen referencias entre ellos, es decir de titulo -> x
+   * @param titulo titulo del fichero
+   * @param cad lista de ficheros
+   * @return lista de combinaciones
+   */
   def reduccingCombNoRef(titulo: String, cad: List[String]): (String, List[String]) = {
     (titulo, cad)
   }
-
 
   /**
    * Función que mappea la ocurrencias de una palabra en un fichero
@@ -107,55 +137,121 @@ object Main {
    * Función que reduce la lista de tuplas (palabra, (titulo, ocurrencias, total de terminos en el documento))
    * @param palabra palabra.
    * @param cad lista de tuplas (titulo, ocurrencias, total de terminos en el documento).
-   * @return tupla (titulo, (palabra, tfidf)).
+   * @return tupla (palabra, (titulo, tfidf)).
    */
   def reduccingTfIdf(palabra: String, cad: List[(String, Int)]): (String, List[(String, Double)]) = {
     val tfidf = cad.map(x => (x._1, x._2.toDouble * math.log(InfoFicheros.numDocumentos / cad.length)))
     (palabra, tfidf)
   }
 
+  /**
+   * Función que mappea cada documento y su frecuencia de una palabra, y usamos para intercambiar titulo con palabra.
+   * @param palabra
+   * @param tfidf
+   * @return
+   */
   def mappingGirar(palabra: String, tfidf: List[(String, Double)]): List[(String, (String, Double))] = {
     for (x <- tfidf) yield (x._1, (palabra, x._2))
   }
 
+  /**
+   * Función que reduce la lista de tuplas (titulo, (palabra, tfidf))
+   * @param titulo titulo del documento.
+   * @param cad lista de tuplas (palabra, tfidf).
+   * @return tupla (titulo, lista de tuplas (palabra, tfidf) ordenado).
+   */
   def reduccingGirar(titulo: String, cad: List[(String, Double)]): (String, List[(String, Double)]) = {
-    (titulo, cad.sortBy(_._2))
+    (titulo, cad.sortBy(_._2)) // Ordenamos ya que despues para la similitud lo necesitaremos ordenado.
   }
 
+  /**
+   * Función que mappea cada documento con el tfidf de cada palabra.
+   * @param titulo titulo del documento
+   * @param cont lista de tuplas (palabra, tfidf)
+   * @return lista de tuplas (titulo, tfidf)
+   */
   def mappigRaizSumatorio(titulo: String, cont: List[(String, Double)]): List[(String, Double)] = {
     for (i <- cont) yield (titulo, i._2)
   }
 
+  /**
+   * Función que reduce la lista de tuplas (titulo, raizsumatorio de tfidf)
+   * @param titulo titulo del documento.
+   * @param cont lista de tfidf.
+   * @return
+   */
   def reduccingRaizSumatiorio(titulo: String, cont: List[Double]): (String, Double) = {
     (titulo, Math.sqrt(cont.foldLeft(0.0)((x, y) => x + y * y).doubleValue))
   }
 
+  /**
+   * Función que mappea cada documento y calculamos su coseno de similitud.
+   * @param doc titulo del documento.
+   * @param documentos lista de dcoumentos con el que se puede comparar.
+   * @return lista de tuplas (titulo, (titulo, coseno de similitud)).
+   */
   def mappingCosinoSimil(doc: String, documentos: List[String]): List[(String, (String, Double))] = {
     val doc1 = InfoFicheros.tituloTFIDF(doc)
     val denomin = InfoFicheros.raizSumatorio(doc)
     for (i <- documentos) yield (doc, (i, InfoFicheros.cosinesim(doc1, denomin, i)))
   }
 
+  /**
+   * Función que reduce la lista de tuplas (documento, (documento, coseno))
+   * @param doc documento.
+   * @param cosinesim lista de tuplas (documento, coseno).
+   * @return
+   */
   def reduccingCosinoSimil(doc:  String, cosinesim: List[(String, Double)]): (String, List[(String,Double)]) = {
     (doc, cosinesim)
   }
 
+  /**
+   * Función mapping para estructurar los datos, donde pondremos como key el mismo valor siempre ya que nos interesa la suma de la cantidad de fotos que tiene cada uno.
+   * @param titol titulo del documento.
+   * @param fotos lista de fotos.
+   * @return lista de tuplas (1, cantidad de fotos).
+   */
   def mappingFotos(titol: String, fotos: List[String]): List[(Int, Int)] = {
     List((1, fotos.length))
   }
 
+  /**
+   * Función que calcula el nombre promedio de fotos.
+   * @param titol titulo del documento.
+   * @param fotos lista de fotos.
+   * @return tupla (titulo, nombre promedio de fotos).
+   */
   def reduccingFotos(titol: Int, fotos: List[Int]): (Int, Double) = {
     (titol, fotos.sum/InfoFicheros.numDocumentos)
   }
 
+  /**
+   * Función mapping para estructurar los datos, donde pondremos como key el mismo valor siempre ya que nos interesa la suma de la cantidad de referencias que tiene cada uno.
+   * @param titol titulo del documento.
+   * @param ref lista de referencias.
+   * @return tupla (1, promedio de referencias).
+   */
   def mappingNombrePromRef(titol: String, ref: List[String]): List[(Int, Int)] = {
     List((1, ref.length))
   }
 
+  /**
+   * Función que calcula el nombre promedio de referencias.
+   * @param titol
+   * @param ref
+   * @return
+   */
   def reduccingNombrePromRef(titol: Int, ref: List[Int]): (Int, Double) = {
     (titol, ref.sum/InfoFicheros.numDocumentos)
   }
 
+  /**
+   * Función que devuelve el tfidf de una palabra en un documento.
+   * @param nmappers número de mappers.
+   * @param nreducers   número de reducers.
+   * @return tupla (palabra, (titulo, tfidf)) y el tiempo de ejecucion
+   */
   private def calculoTfIdf(nmappers: Int, nreducers: Int): (Map[String, List[(String, Double)]], Double) = {
 
     // Calculo de ocurrencias de la palabra en cada documento
@@ -172,27 +268,44 @@ object Main {
     (tfidfs._1, seg + tfidfs._2 / 1000000000.0)
   }
 
+  /**
+   * Función que calcula el TFIDF de cada palabra en cada documento. Por lo tanto tendremos como key la palabra, y como value una lista de tuplas (titulo, tfidf).
+   * @param nmappers número de mappers.
+   * @param nreducers número de reducers.
+   * @param tf tupla (mapa con el tf de titulo con lista de tupla de (palabra, tf), tiempo de ejecución).
+   * @return tupla (mapa con el tfidf de cada palabra con una lista de tuplas (titulo, tfidf), tiempo de ejecución).
+   */
   private def tfidf(nmappers: Int, nreducers: Int, tf: (Map[String, List[(String, Int)]], Long)): (Map[String, List[(String, Double)]], Long) = {
     println("------------------ MapReduce de tfidf ------------------")
-    val tfidf = timeMeasurement(MR("MapReduceSystem", "tfidf", tf._1.toList, mappingTfIdf, reduccingTfIdf, nmappers, nreducers))
-    //palabra y lista de tuplas (titulo, tfidf) (Devuelve)
+    val tfidf = timeMeasurement(MR("tfidf", tf._1.toList, mappingTfIdf, reduccingTfIdf, nmappers, nreducers))
     println("-------------------Resultado-------------------")
     println("Tiempo de ejecución: " + tfidf._2 / 1000000000.0 + " segundos")
     tfidf
   }
 
+  /**
+   * Función que estructura el TF, en el que tendremos la key como documento y como value una lista de tuplas (palabra, tf)
+   * @param nmappers
+   * @param nreducers
+   * @return
+   */
   private def calculoTf(nmappers: Int, nreducers: Int): (Map[String, List[(String, Int)]], Long) = {
     println("------------------ MapReduce de tf ------------------")
-    val tf = timeMeasurement(MR("MapReduceSystem", "tf", InfoFicheros.palabrasCont, mappingTF, reduccingTF, nmappers, nreducers))
-    //titulo y lista de tuplas (palabra, ocurrencias) (Devuelve)
+    val tf = timeMeasurement(MR( "tf", InfoFicheros.palabrasCont, mappingTF, reduccingTF, nmappers, nreducers))
     println("-------------------Resultado-------------------")
     println("Tiempo de ejecución: " + tf._2 / 1000000000.0 + " segundos")
     tf
   }
 
+  /**
+   * Función que calcula las ocurrencias de las palabras en cada documento.
+   * @param nmappers número de mappers.
+   * @param nreducers número de reducers.
+   * @return tiempo de ejecución.
+   */
   private def ocurrenciasPalabras(nmappers: Int, nreducers: Int): Double = {
     println("------------------ MapReduce de palabras contadas ------------------")
-    val palabrasContadas = timeMeasurement(MR("MapReduceSystem", "palabrasContadas", InfoFicheros.fitxTratar, mappingWC, reduccingWC, nmappers, nreducers))
+    val palabrasContadas = timeMeasurement(MR("palabrasContadas", InfoFicheros.fitxTratar, mappingWC, reduccingWC, nmappers, nreducers))
     //tupla ((titulo, palabra), ocurrencias)
     InfoFicheros.palabrasCont = palabrasContadas._1.map(x => (x._1, List(x._2))).toList
     println("-------------------Resultado-------------------")
@@ -201,9 +314,15 @@ object Main {
     tiempo
   }
 
+  /**
+   * Combinamos sin repetir entre los documentos y sin que se referencien entre ellos.
+   * @param nmappers Número de mappers.
+   * @param nreducers Número de reducers.
+   * @return tiempo de ejecución.
+   */
   private def combSinRep(nmappers: Int, nreducers: Int): Double = {
     println("------------------ MapReduce de Combinaciones sin referencias ------------------")
-    val combNoRef = timeMeasurement(MR("MapReduceSystem", "combNoRef", InfoFicheros.fitxTratar, mappingCombNoRef, reduccingCombNoRef, nmappers, nreducers))
+    val combNoRef = timeMeasurement(MR("combNoRef", InfoFicheros.fitxTratar, mappingCombNoRef, reduccingCombNoRef, nmappers, nreducers))
     // Ordenar
     InfoFicheros.combinaciones = combNoRef._1.-(" ")
 
@@ -221,7 +340,7 @@ object Main {
    */
   private def lasMasReferenciadas(nmappers: Int, nreducers: Int): (List[(String, Int)], Double) = {
     println("------------------ MapReduce de Referencias ------------------")
-    val reffitxresult = timeMeasurement(MR("MapReduceSystem", "reffitx", InfoFicheros.fitxRefs.toList, mappingRef, reduccingRef, nmappers, nreducers))
+    val reffitxresult = timeMeasurement(MR("reffitx", InfoFicheros.fitxRefs.toList, mappingRef, reduccingRef, nmappers, nreducers))
 
     // Ordenar el resultado por número de referencias
     val reffitxresultSorted = reffitxresult._1.-(" ").toList.sortBy(_._2).reverse
@@ -245,7 +364,7 @@ object Main {
   private def lecturaFicheros(nmappers: Int, nreducers: Int, grupo: List[(Int, List[String])]): Double = {
     // MapReduce de ficheros
     println("------------------ MapReduce de ficheros ------------------")
-    val ficheros = timeMeasurement(MR("Ficheros", "Ficheros", grupo, mappingLlegir, reduccingLlegir, nmappers, nreducers))
+    val ficheros = timeMeasurement(MR("Ficheros", grupo, mappingLlegir, reduccingLlegir, nmappers, nreducers))
 
     //Obtener el contenido de los ficheros Map[String, List[String]]
     InfoFicheros.fitxConten = for (f <- ficheros._1) yield (f._1, f._2.head._1)
@@ -266,7 +385,7 @@ object Main {
    */
   private def promedioDeFotos(nmappers: Int, nreducers: Int): Double = {
     println("------------------ MapReduce de nombre promedio de todas las fotos ------------------")
-    val nombrePromedioFotos = timeMeasurement(MR("MapReduceSystem", "nombrePromedioFotos", InfoFicheros.fitxFotos.toList, mappingFotos, reduccingFotos, nmappers, nreducers))
+    val nombrePromedioFotos = timeMeasurement(MR("nombrePromedioFotos", InfoFicheros.fitxFotos.toList, mappingFotos, reduccingFotos, nmappers, nreducers))
     println("-------------------Resultado-------------------")
     val tiempo = nombrePromedioFotos._2 / 1000000000.0
     println("Tiempo de ejecución: " + tiempo + " segundos")
@@ -282,7 +401,7 @@ object Main {
    */
   private def promedioDeReferencias(nmappers: Int, nreducers: Int): Double = {
     println("------------------ MapReduce de nombre promedio de referencias todas las paginas ------------------")
-    val nombrePromRef = timeMeasurement(MR("MapReduceSystem", "nombrePromRef", InfoFicheros.fitxRefs.toList, mappingNombrePromRef, reduccingNombrePromRef, nmappers, nreducers))
+    val nombrePromRef = timeMeasurement(MR("nombrePromRef", InfoFicheros.fitxRefs.toList, mappingNombrePromRef, reduccingNombrePromRef, nmappers, nreducers))
     println("-------------------Resultado-------------------")
     val tiempo = nombrePromRef._2 / 1000000000.0
     println("Tiempo de ejecución: " + tiempo + " segundos")
@@ -299,13 +418,13 @@ object Main {
    */
   private def calculoSimilitud(nmappers: Int, nreducers: Int): Double = {
     println("------------------ MapReduce de Denominador ------------------")
-    val denominador = timeMeasurement(MR("MapReduceSystem", "denominador", InfoFicheros.tituloTFIDF.toList, mappigRaizSumatorio, reduccingRaizSumatiorio, nmappers, nreducers))
+    val denominador = timeMeasurement(MR("denominador", InfoFicheros.tituloTFIDF.toList, mappigRaizSumatorio, reduccingRaizSumatiorio, nmappers, nreducers))
     println("-------------------Resultado-------------------")
     println("Tiempo de ejecución: " + denominador._2 / 1000000000.0 + " segundos")
     InfoFicheros.raizSumatorio = denominador._1
 
     println("------------------ MapReduce Similitud documentos ------------------")
-    val similitud = timeMeasurement(MR("MapReduceSystem", "similitud", InfoFicheros.combinaciones.toList, mappingCosinoSimil, reduccingCosinoSimil, nmappers, nreducers))
+    val similitud = timeMeasurement(MR("similitud", InfoFicheros.combinaciones.toList, mappingCosinoSimil, reduccingCosinoSimil, nmappers, nreducers))
     println("-------------------Resultado-------------------")
     val tiempo = similitud._2 / 1000000000.0
     println("Numero de documentos: " + InfoFicheros.numDocumentos)
@@ -324,7 +443,7 @@ object Main {
    */
   private def girarLaKeyConValue(nmappers: Int, nreducers: Int, tfidfs: (Map[String, List[(String, Double)]], Double)): Double = {
     println("------------------ MapReduce de girar ------------------")
-    val girar = timeMeasurement(MR("MapReduceSystem", "girar", tfidfs._1.toList, mappingGirar, reduccingGirar, nmappers, nreducers))
+    val girar = timeMeasurement(MR("girar", tfidfs._1.toList, mappingGirar, reduccingGirar, nmappers, nreducers))
     println("-------------------Resultado-------------------")
     val tempo = girar._2 / 1000000000.0
     println("Tiempo de ejecución: " + tempo + " segundos")
@@ -343,10 +462,7 @@ object Main {
    * @param nreducers Número de reducers
    * @return Resultado del MapReduce
    */
-  def MR[K1, V1, K2, V2, V3](actorSystem: String, actorname: String, input:  List[(K1, List[V1])], mapping: (K1, List[V1]) => List[(K2, V2)], reduccing: (K2, List[V2]) => (K2, V3), nmappers: Int, nreducers: Int): Map[K2, V3] = {
-    // Crear el actor system
-    val systema: ActorSystem = ActorSystem(actorSystem)
-
+  def MR[K1, V1, K2, V2, V3](actorname: String, input:  List[(K1, List[V1])], mapping: (K1, List[V1]) => List[(K2, V2)], reduccing: (K2, List[V2]) => (K2, V3), nmappers: Int, nreducers: Int): Map[K2, V3] = {
     // Crear el actor MapReduce
     val actor = systema.actorOf(Props(new MapReduce[K1,V1,K2,V2,V3](input, mapping, reduccing, nmappers, nreducers)), actorname)
     implicit val timeout = Timeout(10000 seconds) // L'implicit permet fixar el timeout per a la pregunta que enviem al actor. És obligagori.
@@ -355,10 +471,6 @@ object Main {
     println("Awaiting result...")
     // En acabar el MapReduce ens envia un missatge amb el resultat
     val result: Map[K2, V3] = Await.result(future, timeout.duration).asInstanceOf[Map[K2, V3]]
-
-    // Fem el shutdown del actor system
-    systema.terminate()
-    // com tancar el sistema d'actors.
     result
   }
 
@@ -427,6 +539,10 @@ object Main {
 
     // Map Reduces: calculo de promedio de fotos
     segons += promedioDeFotos(nmappers, nreducers)
+
+    // Fem el shutdown del actor system
+    systema.terminate()
+    // com tancar el sistema d'actors.
 
     println("Tiempo total: " + segons + " segundos")
   }

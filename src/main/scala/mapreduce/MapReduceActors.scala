@@ -46,7 +46,6 @@ class MapReduce[K1,V1,K2,V2,V3]( input:List[(K1,List[V1])],
                                  numappers: Int,
                                  numreducers: Int) extends Actor {
 
-  println("Hola "+input.length)
   var nmappers = 0 // adaptar per poder tenir menys mappers
   var mappersPendents = 0
   var nreducers = 0 // adaptar per poder tenir menys reducers
