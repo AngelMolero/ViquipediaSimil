@@ -19,7 +19,7 @@ Els fitxers més rellevants d'aquesta part són els següents:
   <li><strong>Memoria...pdf</strong>: En aquest document s'hi troba les diferents explicacions de la segona part de la pràctica juntament amb les execucions de la primera.</li>
   <li><strong>/src/scala/main/Main.scala</strong>: En aquest fitxer trobem el codi principal de la pràctica.</li>
   <li><strong>/src/scala/mapreduce/InfoFicheros.scala</strong>: En aquest fitxer trobem un object on guardem aspectes calculats un cop, així no ho tornem a fer i millorem el rendiment.</li>
-  <li><strong>/src/scala/MapReduceActors.scala</strong>: En aquest fitxer trobem les classes <strong>Mapper</strong> i <strong>Reducer.</strong></li>
+  <li><strong>/src/scala/MapReduceActors.scala</strong>: En aquest fitxer trobem les classes <strong>Mapper</strong>, <strong>Reducer</strong> i <strong>MapReduce</strong></li>
   <li><strong>/src/scala/ProcessListStrings.scala</strong>: En aquest fitxer trobem els mètodes inicials per llegir els fitxers d&rsquo;input.</li>
 </ol>
 
