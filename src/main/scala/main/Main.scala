@@ -41,7 +41,7 @@ object Main {
   /**
    * Función que mappea para estructurar los datos. Nos interesa que key sea la referencia y el value un contador, de las veces que sale esa referencia en el documento.
    * @param titol : título del documento.
-   * @param cad : contenido del documento.
+   * @param cad : referencias del documento.
    * @return List[(String, Int)] : lista de referencias y el número de veces que aparece.
    */
   def mappingRef(titol: String, info: List[String]): List[(String,Int)] = {
@@ -492,7 +492,7 @@ object Main {
     InfoFicheros.ficheros = ProcessListStrings.getListOfFiles("viqui_files").map(_.toString)
 
     // Numero de documentos que queremos procesar
-    val numPag = InfoFicheros.ficheros.length
+    val numPag = 1000 //InfoFicheros.ficheros.length
     // Pedir al usuario cantidad de mappers
     val nmappers = 12
     // Pedir al usuario cantidad de reducers
@@ -544,6 +544,6 @@ object Main {
     systema.terminate()
     // com tancar el sistema d'actors.
 
-    println("Tiempo total: " + segons + " segundos")
+    println("\nTiempo total de toda la ejecución: " + segons + " segundos")
   }
 }
